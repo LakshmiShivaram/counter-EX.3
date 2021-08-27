@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { filter, map, skip, startWith, take } from 'rxjs/operators';
 import { increment, decrement, reset } from '../counter.actions';
 
@@ -11,7 +11,7 @@ import { increment, decrement, reset } from '../counter.actions';
 })
 export class MyCounterComponent {
   count$: Observable<number>;
-  operations$: BehaviorSubject<string>;
+  // operations$: BehaviorSubject<string>;
 
   constructor(private store: Store<{ count: number }>) {
     this.count$ = store.select('count');
@@ -38,15 +38,24 @@ export class MyCounterComponent {
     this.count$
       .pipe(startWith(100))
       .subscribe(value => console.log(' startwith', value));
+  }
 
-    // 0*(1,2,3,),
-    // 1*(1,2,3,),
-    // 2*(1,2,3),
-    // 4*(1,2,3)
+  calculate(value: string) {
+    let operations$ = new BehaviorSubject<string>('');
+    operations$.next(value);
+    combineLatest(this.count$, operations$).subscribe(res => {
+      console.log('add n mul', res);
+      if (res[1] == 'add') {
+        console.log('Addition ' + (res[0] + res[0]));
+      } else if (res[1] == 'multiply') {
+        console.log('Multiplication ' + res[0] * res[0]);
+      }
+    });
   }
 
   increment() {
     this.store.dispatch(increment());
+    this.calculate('this.count$');
   }
 
   decrement() {
